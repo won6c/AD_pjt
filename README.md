@@ -79,5 +79,6 @@ pip install -r requirements.txt
 
 # 3. 마이그레이션 및 서버 실행
 python manage.py migrate
-python manage.py runserver
+python manage.py runsslserver --certificate cert.pem --key key.pem
+
 ```
