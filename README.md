@@ -77,8 +77,8 @@ python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# 3. 마이그레이션 및 서버 실행
+# 3. 마이그레이션 및 서버 실행 ( cert.pem & key.pem은 생성해야 함 )
 python manage.py migrate
-python manage.py runsslserver --certificate cert.pem --key key.pem
+python manage.py runsslserver --certificate cert.pem --key key.pem 
 
 ```
