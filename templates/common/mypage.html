@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}마이페이지{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>🙍 {{ user.username }}님의 마이페이지</h2>
+
+    <!-- 🎮 캐릭터 선택 -->
+    <hr>
+    <h5 class="mt-4">🎮 현재 선택된 캐릭터</h5>
+    <p>선택값: {{ profile.character }}</p>
+
+    <div class="mb-3">
+        <img src="{% static 'player_walk.png' %}" width="64"
+             {% if profile.character == 'char1' %}style="border:2px solid blue;"{% endif %}>
+        <img src="{% static 'player_walk2.png' %}" width="64"
+             {% if profile.character == 'char2' %}style="border:2px solid blue;"{% endif %}>
+        <img src="{% static 'player_walk3.png' %}" width="64"
+             {% if profile.character == 'char3' %}style="border:2px solid blue;"{% endif %}>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary mt-2">캐릭터 변경</button>
+    </form>
+
+    <!-- 📚 대출 기록 -->
+    <hr>
+    <h4 class="mt-5">📚 내 대출 목록</h4>
+    {% if records %}
+        <table class="table table-bordered mt-3">
+            <thead class="table-light">
+                <tr>
+                    <th>도서명</th>
+                    <th>대출일</th>
+                    <th>반납일</th>
+                    <th>상태</th>
+                    <th>반납</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                    <tr>
+                        <td><a href="{% url 'library:book_detail' record.book.id %}">{{ record.book.title }}</a></td>
+                        <td>{{ record.borrow_date }}</td>
+                        <td>{% if record.return_date %}{{ record.return_date }}{% else %}-{% endif %}</td>
+                        <td>
+                            {% if record.is_returned %}
+                                <span class="badge bg-secondary">반납 완료</span>
+                            {% else %}
+                                <span class="badge bg-success">대출 중</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not record.is_returned %}
+                                <a href="{% url 'library:return_book' record.id %}" class="btn btn-danger btn-sm">반납하기</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted">현재 대출 중인 도서가 없습니다.</p>
+    {% endif %}
+
+    <!-- 📝 질문 목록 -->
+    <hr>
+    <h4 class="mt-5">📑 내가 작성한 질문</h4>
+    {% if my_questions %}
+        <ul class="list-group mt-3">
+            {% for q in my_questions %}
+                <li class="list-group-item">
+                    <a href="{% url 'pybo:detail' q.id %}">{{ q.subject }}</a>
+                    <small class="text-muted">({{ q.create_date|date:"Y-m-d H:i" }})</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">작성한 질문이 없습니다.</p>
+    {% endif %}
+
+    <!-- 💬 답변 목록 -->
+    <h4 class="mt-5">💬 내가 작성한 답변</h4>
+    {% if my_answers %}
+        <ul class="list-group mt-3">
+            {% for a in my_answers %}
+                <li class="list-group-item">
+                    <a href="{% url 'pybo:detail' a.question.id %}">{{ a.content|truncatechars:50 }}</a>
+                    <small class="text-muted">({{ a.create_date|date:"Y-m-d H:i" }})</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">작성한 답변이 없습니다.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

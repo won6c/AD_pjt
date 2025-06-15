@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}{{ book.title }} 평점 등록{% endblock %}
+{% block content %}
+<div class="container mt-4" style="max-width: 600px;">
+  <h3>⭐️ {{ book.title }} 평점 남기기</h3>
+  <form method="post">
+    {% csrf_token %}
+    {% include "form_errors.html" %}
+
+    <div class="mb-3">
+      <label class="form-label">별점 (1~5)</label><br>
+      <div id="star-rating">
+        {% for i in "12345" %}
+          <span class="star" data-value="{{ i }}">&#9733;</span>
+        {% endfor %}
+      </div>
+
+      <!-- ✅ 시각적으로만 숨김 처리 -->
+      <div style="position: absolute; left: -9999px;">
+        {{ form.rating }}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">리뷰</label>
+      {{ form.review }}
+    </div>
+    <button type="submit" class="btn btn-primary">등록</button>
+    <a href="{% url 'library:book_detail' book.id %}" class="btn btn-secondary">취소</a>
+  </form>
+</div>
+
+<style>
+  .star {
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+  }
+  .star.selected {
+    color: gold;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const stars = document.querySelectorAll('.star');
+    const radios = document.querySelectorAll('input[name="rating"]');
+
+    // 현재 선택 값 초기화
+    const checked = document.querySelector('input[name="rating"]:checked');
+    if (checked) {
+      const value = checked.value;
+      for (let i = 0; i < value; i++) {
+        stars[i].classList.add('selected');
+      }
+    }
+
+    // 클릭 이벤트
+    stars.forEach((star, index) => {
+      star.addEventListener('click', () => {
+        const value = star.dataset.value;
+        // 선택 시 시각적으로 별 표시
+        stars.forEach(s => s.classList.remove('selected'));
+        for (let i = 0; i < value; i++) {
+          stars[i].classList.add('selected');
+        }
+
+        // 실제 라디오 버튼 값도 선택
+        if (radios[value - 1]) {
+          radios[value - 1].checked = true;
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}AI 추천 도서{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">
+  📖 "{{ base_book.title }}"와 비슷한 도서 추천
+</h2>
+
+{% if query %}
+<p class="text-center text-muted mb-4">
+  🔍 검색어 "<strong>{{ query }}</strong>"에 해당하는 도서가 기준이 되었습니다.
+  {% if base_book.title|lower != query|lower %}
+    (가장 유사한 책: <strong>{{ base_book.title }}</strong>)
+  {% endif %}
+</p>
+{% else %}
+<p class="text-center text-muted mb-4">
+  ⚙️ 검색어가 없어 무작위로 책을 선택했습니다.
+</p>
+{% endif %}
+
+<div class="mx-auto" style="max-width: 700px;">
+  {% for book in recommended_books %}
+  <div class="p-3 border-bottom">
+    <h5 class="fw-bold text-primary">
+      <a href="{% url 'library:book_detail' book.id %}" class="text-decoration-none text-primary">
+        {{ book.title }}
+      </a>
+    </h5>
+    <div class="text-muted small">{{ book.author }} / {{ book.published_date }}</div>
+    {% if book.description %}
+    <p class="mt-2">{{ book.description|truncatechars:100 }}</p>
+    {% else %}
+    <p class="mt-2 text-muted fst-italic">설명이 없습니다.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="text-center mt-4">
+  <a href="{% url 'library:book_recommend' %}?query={{ query }}" class="btn btn-outline-primary me-2">
+    🔄 다시 추천 받기
+  </a>
+  <a href="{% url 'library:book_search' %}" class="btn btn-outline-secondary">
+    🔍 도서 검색하기
+  </a>
+</div>
+{% endblock %}

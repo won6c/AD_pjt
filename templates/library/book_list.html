@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}📚 도서 검색 시스템{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">📚 도서 검색 시스템</h1>
+
+<form method="get" action="{% url 'library:book_search' %}" class="d-flex justify-content-center mb-4 gap-2">
+  <input type="text" name="query" class="form-control w-25" placeholder="검색어를 입력하세요" value="{{ query }}">
+  <select name="field" class="form-select w-auto">
+    <option value="title" {% if field == 'title' %}selected{% endif %}>제목</option>
+    <option value="author" {% if field == 'author' %}selected{% endif %}>저자</option>
+    <option value="keyword" {% if field == 'keyword' %}selected{% endif %}>키워드</option>
+  </select>
+  <select name="order" class="form-select w-auto">
+    <option value="title" {% if order == 'title' %}selected{% endif %}>제목순</option>
+    <option value="author" {% if order == 'author' %}selected{% endif %}>저자순</option>
+    <option value="date" {% if order == 'date' %}selected{% endif %}>출간일순</option>
+  </select>
+  <button type="submit" class="btn btn-primary">검색</button>
+  <a href="{% url 'library:book_recommend' %}?query={{ query }}" class="btn btn-success">
+    📖 AI 추천
+  </a>
+</form>
+
+<div class="mx-auto" style="max-width: 700px;">
+  {% if page_obj.object_list %}
+    {% for book in page_obj %}
+    <div class="p-3 border-bottom">
+      <h5 class="fw-bold text-primary">
+        <a href="{% url 'library:book_detail' book.id %}" class="text-decoration-none text-primary">
+          {{ book.title }}
+        </a>
+      </h5>
+      <div class="text-muted small">{{ book.author }} / {{ book.published_date }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-center">검색 결과가 없습니다.</p>
+  {% endif %}
+</div>
+
+<!-- ✅ 페이지네이션 영역 -->
+{% if page_obj.has_other_pages %}
+<div class="d-flex justify-content-center mt-4">
+  <ul class="pagination">
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?query={{ query }}&field={{ field }}&order={{ order }}&page={{ page_obj.previous_page_number }}">
+          ← 이전
+        </a>
+      </li>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+        <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+          <a class="page-link" href="?query={{ query }}&field={{ field }}&order={{ order }}&page={{ num }}">{{ num }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?query={{ query }}&field={{ field }}&order={{ order }}&page={{ page_obj.next_page_number }}">
+          다음 →
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+</div>
+{% endif %}
+{% endblock %}

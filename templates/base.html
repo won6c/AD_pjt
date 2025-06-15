@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}AD 프로젝트{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+        <a class="navbar-brand" href="{% url 'index' %}">🏠 Home</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="/pybo/">📑 게시판</a></li>
+                <li class="nav-item"><a class="nav-link" href="/library/">📚 도서관</a></li>
+                <li class="nav-item"><a class="nav-link" href="/game/doom/">🎮 게임</a></li>
+            </ul>
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'common:mypage' %}">{{ user.username }}님</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'common:logout' %}">로그아웃</a></li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'common:login' %}">로그인</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'common:signup' %}">회원가입</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- ✅ Toast 메시지 영역 -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+        <div id="toast-message" class="toast align-items-center text-bg-success border-0" role="alert"
+             aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toast-text">알림 메시지입니다.</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const toastEl = document.getElementById('toast-message');
+            const toastText = document.getElementById('toast-text');
+
+            {% for message in messages %}
+                toastText.innerText = "{{ message|escapejs }}";
+                const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+                toast.show();
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
+
+    <!-- ⬇️ Phaser.js는 로비(/)나 도서관(/library/)일 때만 로드 -->
+    {% if request.path == '/' or request.path == '/library/' %}
+        <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+    {% endif %}
+</body>
+</html>

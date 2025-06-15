@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}도서 정보{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">{{ book.title }}</h2>
+    <p><strong>저자:</strong> {{ book.author }}</p>
+    <p><strong>출간일:</strong> {{ book.published_date }}</p>
+    <p><strong>키워드:</strong> {{ book.keyword }}</p>
+    <p><strong>설명:</strong><br>{{ book.description|linebreaks }}</p>
+
+    <hr>
+    <h4>📊 평점</h4>
+    {% with avg=book.average_rating|floatformat:1 %}
+        {% for i in "12345" %}
+            {% if forloop.counter <= avg|floatformat:0 %}
+                ⭐
+            {% else %}
+                <span style="color: #ddd;">⭐</span>
+            {% endif %}
+        {% endfor %}
+        <small class="text-muted">({{ avg }} / 5.0)</small>
+    {% endwith %}
+
+    <hr>
+    {% if user.is_authenticated %}
+        {% if not book.is_borrowed %}
+            <a href="{% url 'library:borrow_book' book.id %}" class="btn btn-success">📦 대출하기</a>
+        {% elif user_borrow %}
+            <form action="{% url 'library:return_book' user_borrow.id %}" method="post" style="display:inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">🔙 반납하기</button>
+            </form>
+        {% endif %}
+        <a href="{% url 'library:rate_book' book.id %}" class="btn btn-warning">⭐ 평점 남기기</a>
+    {% else %}
+        <p><a href="{% url 'common:login' %}">로그인</a> 후 대출/평점 작성이 가능합니다.</p>
+    {% endif %}
+
+    <hr>
+    <h4>📝 리뷰</h4>
+    {% if reviews %}
+        <ul class="list-group mb-3">
+            {% for review in reviews %}
+                <li class="list-group-item">
+                    <strong>{{ review.user.username }}</strong> —
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= review.rating %}
+                            ⭐
+                        {% else %}
+                            <span style="color: #ddd;">⭐</span>
+                        {% endif %}
+                    {% endfor %}
+                    <br>
+                    <span class="text-muted" style="font-size: 0.9em">{{ review.created_at|date:"Y-m-d H:i" }}</span><br>
+                    <div>{{ review.review|linebreaks }}</div>
+                    {% if request.user == review.user %}
+                        <div class="mt-2">
+                            <a href="{% url 'library:edit_review' book_id=book.id review_id=review.id %}" class="btn btn-sm btn-outline-primary">✏️ 수정</a>
+                            <a href="{% url 'library:delete_review' book_id=book.id review_id=review.id %}" class="btn btn-sm btn-outline-danger">🗑 삭제</a>
+                        </div>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">아직 등록된 리뷰가 없습니다.</p>
+    {% endif %}
+</div>
+{% endblock %}

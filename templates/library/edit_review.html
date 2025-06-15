@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3>✏ 리뷰 수정 - {{ book.title }}</h3>
+  <form method="post">
+    {% csrf_token %}
+    {% include 'form_errors.html' %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">수정 완료</button>
+  </form>
+</div>
+{% endblock %}

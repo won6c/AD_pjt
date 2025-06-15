@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}도서관 로비{% endblock %}
+
+{% block content %}
+<style>
+    #map-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: calc(100vh - 56px);
+        position: relative;
+    }
+    canvas {
+        border: 2px solid #000;
+    }
+    #tooltip {
+        position: absolute;
+        padding: 6px 10px;
+        background: rgba(0,0,0,0.75);
+        color: white;
+        border-radius: 5px;
+        font-size: 14px;
+        display: none;
+        z-index: 10;
+        pointer-events: none;
+        transform: translate(-50%, -100%);
+    }
+</style>
+
+<div id="map-container">
+    <div id="tooltip"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+
+<script>
+    // 로그인한 사용자의 캐릭터 선택값을 Django에서 전달
+    {% if user.is_authenticated %}
+        const selectedCharacter = "{{ request.user.userprofile.character }}";  // e.g., 'char2'
+    {% else %}
+        const selectedCharacter = "char1";  // 기본 캐릭터
+    {% endif %}
+
+    const spriteMap = {
+        'char1': 'player_walk.png',
+        'char2': 'player_walk2.png',
+        'char3': 'player_walk3.png'
+    };
+    const spriteFile = spriteMap[selectedCharacter] || 'player_walk.png';
+
+    const config = {
+        type: Phaser.AUTO,
+        width: 960,
+        height: 640,
+        parent: 'map-container',
+        physics: {
+            default: 'arcade',
+            arcade: { gravity: { y: 0 }, debug: false }
+        },
+        scene: { preload, create, update }
+    };
+
+    let player, cursors, tooltip, camera;
+    const game = new Phaser.Game(config);
+
+    const zones = [
+        { x: 7 * 32, y: 32, text: "📂 게시판", url: "/pybo/" },
+        { x: 14 * 32, y: 32, text: "📚 도서관", url: "/library/" },
+        { x: 21 * 32, y: 32, text: "🎮 게임", url: "/game/doom/" }
+    ];
+
+    function preload() {
+        this.load.image('background', '/static/pixel_lobby_bg.png');
+        this.load.spritesheet('player', '/static/' + spriteFile, {
+            frameWidth: 32,
+            frameHeight: 48
+        });
+    }
+
+    function create() {
+        this.add.image(480, 320, 'background');
+
+        player = this.physics.add.sprite(480, 500, 'player', 0);
+        player.setCollideWorldBounds(true);
+        player.setSize(32, 48);
+        player.setDepth(1);
+
+        this.anims.create({
+            key: 'walk',
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 2 }),
+            frameRate: 6,
+            repeat: -1
+        });
+
+        cursors = this.input.keyboard.createCursorKeys();
+        tooltip = document.getElementById("tooltip");
+        camera = this.cameras.main;
+    }
+
+    function update() {
+        const speed = 160;
+        let moving = false;
+        player.setVelocity(0);
+
+        if (cursors.left.isDown) {
+            player.setVelocityX(-speed);
+            player.setFlipX(true);
+            moving = true;
+        } else if (cursors.right.isDown) {
+            player.setVelocityX(speed);
+            player.setFlipX(false);
+            moving = true;
+        }
+
+        if (cursors.up.isDown) {
+            player.setVelocityY(-speed);
+            moving = true;
+        } else if (cursors.down.isDown) {
+            player.setVelocityY(speed);
+            moving = true;
+        }
+
+        if (moving) {
+            player.anims.play('walk', true);
+        } else {
+            player.anims.stop();
+        }
+
+        // 툴팁 위치 계산
+        const { x, y } = player;
+        let hovering = false;
+
+        zones.forEach(zone => {
+            const dx = Math.abs(x - zone.x);
+            const dy = Math.abs(y - zone.y);
+
+            if (dx < 40 && dy < 40) {
+                const screenX = zone.x - camera.scrollX;
+                const screenY = zone.y - camera.scrollY;
+
+                tooltip.style.left = `${screenX + 188}px`;
+                tooltip.style.top = `${screenY + 76}px`;
+                tooltip.innerText = zone.text;
+                tooltip.style.display = 'block';
+                hovering = true;
+
+                if (dx < 20 && dy < 20) {
+                    window.location.href = zone.url;
+                }
+            }
+        });
+
+        if (!hovering) tooltip.style.display = 'none';
+    }
+</script>
+{% endblock %}

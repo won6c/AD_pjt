@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}도서관 내부{% endblock %}
+
+{% block content %}
+<style>
+    #map-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: calc(100vh - 56px);
+        position: relative;
+    }
+    canvas {
+        border: 2px solid #000;
+    }
+    #tooltip {
+        position: absolute;
+        padding: 6px 10px;
+        background: rgba(0,0,0,0.75);
+        color: white;
+        border-radius: 5px;
+        font-size: 14px;
+        display: none;
+        z-index: 10;
+        pointer-events: none;
+    }
+</style>
+
+<div id="map-container">
+    <div id="tooltip"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+<script>
+    const config = {
+        type: Phaser.AUTO,
+        width: 960,
+        height: 640,
+        parent: 'map-container',
+        physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
+        scene: { preload, create, update }
+    };
+
+    let player, cursors, tooltip;
+    const game = new Phaser.Game(config);
+
+    const zones = [
+        { x: 14 * 32, y: 8 * 32, text: "🔍 도서 검색", url: "/library/books/search/" },
+        { x: 3 * 32, y: 16 * 32, text: "📦 도서 대여/반납", url: "/library/books/borrow/" },
+        { x: 15 * 32, y: 19 * 32, text: "🔙 로비로 이동", url: "/" }  // ⬅️ 추가된 로비 복귀 zone
+    ];
+
+    function preload() {
+        this.load.image('background', '/static/library_room_final.png');
+        this.load.spritesheet('player', '/static/player_walk.png', {
+            frameWidth: 32, frameHeight: 48
+        });
+    }
+
+    function create() {
+        this.add.image(480, 320, 'background');
+        player = this.physics.add.sprite(15 * 32, 17 * 32, 'player', 0);
+        player.setCollideWorldBounds(true);
+        cursors = this.input.keyboard.createCursorKeys();
+
+        this.anims.create({
+            key: 'walk',
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 2 }),
+            frameRate: 6,
+            repeat: -1
+        });
+
+        tooltip = document.getElementById("tooltip");
+    }
+
+    function update() {
+        player.setVelocity(0);
+        const speed = 160;
+        const { x, y } = player;
+        let moving = false;
+
+        if (cursors.left.isDown) {
+            player.setVelocityX(-speed);
+            player.setFlipX(true);
+            moving = true;
+        } else if (cursors.right.isDown) {
+            player.setVelocityX(speed);
+            player.setFlipX(false);
+            moving = true;
+        }
+        if (cursors.up.isDown) {
+            player.setVelocityY(-speed);
+            moving = true;
+        } else if (cursors.down.isDown) {
+            player.setVelocityY(speed);
+            moving = true;
+        }
+
+        if (moving) player.anims.play('walk', true);
+        else player.anims.stop();
+
+        let hovering = false;
+        zones.forEach(zone => {
+            const dx = Math.abs(x - zone.x);
+            const dy = Math.abs(y - zone.y);
+            if (dx < 40 && dy < 40) {
+                const canvasRect = game.canvas.getBoundingClientRect();
+                const screenX = canvasRect.left + zone.x;
+                const screenY = canvasRect.top + zone.y;
+                tooltip.style.left = `${screenX - 340}px`;
+                tooltip.style.top = `${screenY - 110}px`;
+                tooltip.innerText = zone.text;
+                tooltip.style.display = 'block';
+                hovering = true;
+
+                if (dx < 20 && dy < 20) {
+                    window.location.href = zone.url;
+                }
+            }
+        });
+
+        if (!hovering) tooltip.style.display = 'none';
+    }
+</script>
+{% endblock %}

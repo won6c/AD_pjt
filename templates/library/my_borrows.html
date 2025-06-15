@@ -1,0 +1,48 @@
+<!-- templates/library/my_borrows.html -->
+{% extends 'base.html' %}
+
+{% block title %}내 대출 목록{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>📚 {{ user.username }}님의 대출 기록</h3>
+    <hr>
+
+    {% if records %}
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>도서명</th>
+                    <th>대출일</th>
+                    <th>반납일</th>
+                    <th>상태</th>
+                    <th>반납</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                    <tr>
+                        <td><a href="{% url 'library:book_detail' record.book.id %}">{{ record.book.title }}</a></td>
+                        <td>{{ record.borrow_date }}</td>
+                        <td>{% if record.return_date %}{{ record.return_date }}{% else %}-{% endif %}</td>
+                        <td>
+                            {% if record.is_returned %}
+                                <span class="badge bg-secondary">반납 완료</span>
+                            {% else %}
+                                <span class="badge bg-success">대출 중</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not record.is_returned %}
+                                <a href="{% url 'library:return_book' record.id %}" class="btn btn-danger btn-sm">반납하기</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted">현재 대출 중인 도서가 없습니다.</p>
+    {% endif %}
+</div>
+{% endblock %}

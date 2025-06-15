@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2 class="text-center mt-4">🎮 Classic DOOM (JS-DOS 실행)</h2>
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 90vh;">
+  <div id="dosbox" class="dosbox-container shadow rounded" style="width: 960px; height: 720px; background-color: #000;"></div>
+</div>
+
+<script src="https://js-dos.com/cdn/js-dos-api.js"></script>
+<script>
+  // CSRF 토큰 추출 함수
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Doom 실행 & 시간 측정
+  const dosbox = new Dosbox({
+    id: "dosbox",
+    autolock: true,
+    scale: 2,
+    onload: function (dosbox) {
+      dosbox.run("{% static 'doom-js/doom.zip' %}", "./DOOM.EXE");
+
+      // 🕒 시작 시간 기록
+      const startTime = Date.now();
+
+      // ⏱️ 2분 후 서버에 플레이 기록 전송 (임시 테스트용)
+      setTimeout(() => {
+        const endTime = Date.now();
+        const duration = Math.round((endTime - startTime) / 1000); // 초 단위
+
+        fetch("/api/game/doom/record/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+          },
+          body: JSON.stringify({
+            duration: duration,
+            score: 0  // 점수 시스템 추가되면 수정 가능
+          })
+        }).then(response => {
+          if (response.ok) {
+            console.log("✅ 플레이 기록 저장 완료");
+          } else {
+            console.warn("❌ 저장 실패");
+          }
+        }).catch(err => {
+          console.error("네트워크 오류", err);
+        });
+      }, 2 * 60 * 1000);  // 2분 후 자동 저장
+    }
+  });
+</script>
+{% endblock %}
