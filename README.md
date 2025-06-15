@@ -50,3 +50,34 @@
 
 ## 📂 프로젝트 구조
 
+```
+djangobook/
+├── api/               # 도서 평점 및 게임 기록 API
+├── common/            # 회원가입, 로그인, 마이페이지
+├── config/            # Django 설정
+├── game/              # DOOM 게임 실행 및 기록 저장
+├── library/           # 도서 검색/추천/대출/평점 기능
+├── pybo/              # 질문/답변 게시판 기능
+├── static/            # 캐릭터 스프라이트, 배경 맵, Doom 파일
+├── logs/            # activity log
+└── templates/         # HTML 템플릿 파일
+```
+
+---
+
+## ⚙️ 설치 및 실행 방법
+
+```bash
+# 1. 프로젝트 클론
+git clone https://github.com/your-id/your-project-name.git
+cd your-project-name
+
+# 2. 가상환경 설정 및 의존성 설치
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 3. 마이그레이션 및 서버 실행
+python manage.py migrate
+python manage.py runserver
+```
